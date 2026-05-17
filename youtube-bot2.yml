@@ -1,16 +1,9 @@
 name: YouTube Automation Bot
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      keyword:
-        description: 'Video search keyword'
-        required: true
-        default: 'nature'
-      sound:
-        description: 'Sound search keyword'
-        required: true
-        default: 'ambient'
 
 jobs:
   test:
