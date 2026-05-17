@@ -21,11 +21,11 @@ jobs:
           PIX_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           echo "=== PIXABAY RESULTS ==="
-          curl -s "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}&per_page=2" | head -c 500
+          curl -s "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}&per_page=2"
 
       - name: Test Freesound API
         env:
           FS_KEY: ${{ secrets.FREESOUND_API_KEY }}
         run: |
           echo "=== FREESOUND RESULTS ==="
-          curl -s "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&per_page=2&fields=id,name,username" | head -c 500
+          curl -s "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&per_page=2&fields=id,name,username"
