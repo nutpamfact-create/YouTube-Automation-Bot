@@ -1,0 +1,34 @@
+name: YouTube Automation Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      keyword:
+        description: 'Video search keyword (ex: nature, city, beach)'
+        required: true
+        default: 'nature'
+      sound:
+        description: 'Sound search keyword (ex: thunder, rain, piano)'
+        required: true
+        default: 'ambient'
+
+jobs:
+  create-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fetch videos from Pixabay
+        env:
+          PIXABAY_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          echo "Searching videos for: ${{ github.event.inputs.keyword }}"
+          curl "https://pixabay.com/api/videos/?key=$PIXABAY_KEY&q=${{ github.event.inputs.keyword }}&per_page=2"
+
+      - name: Fetch sounds from Freesound
+        env:
+          FREESOUND_KEY: ${{ secrets.FREESOUND_API_KEY }}
+        run: |
+          echo "Searching sounds for: ${{ github.event.inputs.sound }}"
+          curl "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FREESOUND_KEY&per_page=2"
