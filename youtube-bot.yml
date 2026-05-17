@@ -1,4 +1,4 @@
-name: YouTube Automation Bot
+ name: YouTube Automation Bot
 
 on:
   workflow_dispatch:
