@@ -57,14 +57,14 @@ jobs:
           echo "Video created successfully!"
 
       - name: Upload to YouTube
-        uses: Mitcheljager/upload-to-youtube-action@v1
+        uses: eat-pray-ai/youtube-uploader@main
         with:
-          video: output.mp4
+          file: output.mp4
           title: ${{ github.event.inputs.title }}
           description: ${{ github.event.inputs.description }}
           tags: "nature,relaxing,ambient"
           privacyStatus: "public"
         env:
-          CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
-          REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
