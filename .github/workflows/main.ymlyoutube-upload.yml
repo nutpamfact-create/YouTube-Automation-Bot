@@ -1,0 +1,70 @@
+name: YouTube Video Creator
+
+on:
+  workflow_dispatch:
+    inputs:
+      keyword:
+        description: 'Video topic (ex: nature, city, beach)'
+        required: true
+        default: 'nature'
+      sound:
+        description: 'Background sound (ex: piano, rain, ambient)'
+        required: true
+        default: 'piano'
+      title:
+        description: 'YouTube Video Title'
+        required: true
+        default: 'Amazing Nature Video'
+      description:
+        description: 'YouTube Description'
+        required: true
+        default: 'Beautiful video with relaxing music'
+
+jobs:
+  create-and-upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg jq
+
+      - name: Get Video from Pixabay
+        env:
+          PIX_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          echo "Fetching video for: ${{ github.event.inputs.keyword }}"
+          VIDEO_URL=$(curl -s "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}" | jq -r '.hits[0].videos.medium.url')
+          echo "Video URL: $VIDEO_URL"
+          curl -L -o video.mp4 "$VIDEO_URL"
+
+      - name: Get Sound from Freesound
+        env:
+          FS_KEY: ${{ secrets.FREESOUND_API_KEY }}
+        run: |
+          echo "Fetching sound for: ${{ github.event.inputs.sound }}"
+          SOUND_URL=$(curl -s "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&fields=previews&page_size=1" | jq -r '.results[0].previews."preview-hq-mp3"')
+          echo "Sound URL: $SOUND_URL"
+          curl -L -o audio.mp3 "$SOUND_URL"
+
+      - name: Combine Video + Audio
+        run: |
+          ffmpeg -stream_loop -1 -i audio.mp3 -i video.mp4 -c:v copy -c:a aac -shortest -map 0:a -map 1:v output.mp4
+          echo "Video created successfully!"
+
+      - name: Upload to YouTube
+        uses: Mitcheljager/upload-to-youtube-action@v1
+        with:
+          video: output.mp4
+          title: ${{ github.event.inputs.title }}
+          description: ${{ github.event.inputs.description }}
+          tags: "nature,relaxing,ambient"
+          privacyStatus: "public"
+        env:
+          CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
