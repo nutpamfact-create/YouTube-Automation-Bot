@@ -31,4 +31,4 @@ jobs:
           FREESOUND_KEY: ${{ secrets.FREESOUND_API_KEY }}
         run: |
           echo "Searching sounds for: ${{ github.event.inputs.sound }}"
-          curl "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FREESOUND_KEY&per_page=2"
+          curl "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FREESOUND_KEY&per_page=2" 
