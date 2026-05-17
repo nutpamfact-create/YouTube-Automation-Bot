@@ -1,0 +1,12 @@
+name: Test Freesound
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test API
+        run: |
+          curl "https://freesound.org/apiv2/search/text/?query=thunder&token=${{ secrets.FREESOUND_API_KEY }}"
