@@ -2,9 +2,30 @@ name: YouTube Bot
 
 on:
   workflow_dispatch:
+    inputs:
+      keyword:
+        description: 'Video search keyword'
+        required: true
+        default: 'nature'
+      sound:
+        description: 'Sound search keyword'
+        required: true
+        default: 'piano'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello World"
+      - name: Test Pixabay API
+        env:
+          PIX_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          echo "Searching videos for: ${{ github.event.inputs.keyword }}"
+          curl "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}&per_page=2"
+
+      - name: Test Freesound API
+        env:
+          FS_KEY: ${{ secrets.FREESOUND_API_KEY }}
+        run: |
+          echo "Searching sounds for: ${{ github.event.inputs.sound }}"
+          curl "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&per_page=2"
