@@ -1,0 +1,28 @@
+name: YouTube Automation Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      keyword:
+        description: 'Video search keyword'
+        required: true
+        default: 'nature'
+      sound:
+        description: 'Sound search keyword'
+        required: true
+        default: 'ambient'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test APIs
+        env:
+          PIXABAY_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          FREESOUND_KEY: ${{ secrets.FREESOUND_API_KEY }}
+        run: |
+          echo "Testing Pixabay..."
+          curl "https://pixabay.com/api/videos/?key=$PIXABAY_KEY&q=nature&per_page=1"
+          echo ""
+          echo "Testing Freesound..."
+          curl "https://freesound.org/apiv2/search/text/?query=ambient&token=$FREESOUND_KEY&per_page=1"
