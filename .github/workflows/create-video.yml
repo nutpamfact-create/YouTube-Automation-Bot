@@ -1,0 +1,47 @@
+name: Create Video Only
+
+on:
+  workflow_dispatch:
+    inputs:
+      keyword:
+        description: 'Video topic (nature, city, beach)'
+        required: true
+        default: 'nature'
+      sound:
+        description: 'Sound (piano, rain, ambient)'
+        required: true
+        default: 'piano'
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg jq
+
+      - name: Get Video from Pixabay
+        env:
+          PIX_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          VIDEO_URL=$(curl -s "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}" | jq -r '.hits[0].videos.medium.url')
+          curl -L -o video.mp4 "$VIDEO_URL"
+          echo "Video downloaded!"
+
+      - name: Get Sound from Freesound
+        env:
+          FS_KEY: ${{ secrets.FREESOUND_API_KEY }}
+        run: |
+          SOUND_URL=$(curl -s "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&fields=previews&page_size=1" | jq -r '.results[0].previews."preview-hq-mp3"')
+          curl -L -o audio.mp3 "$SOUND_URL"
+          echo "Sound downloaded!"
+
+      - name: Combine Video + Audio
+        run: |
+          ffmpeg -stream_loop -1 -i audio.mp3 -i video.mp4 -c:v copy -c:a aac -shortest -map 0:a -map 1:v output.mp4
+          echo "✅ Video created: output.mp4"
+
+      - name: Upload Video as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: created-video
+          path: output.mp4
