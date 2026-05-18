@@ -14,7 +14,8 @@ jobs:
       - name: Test YouTube Auth
         run: |
           python3 << 'EOF'
-          from google.auth.credentials import Credentials
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
           from googleapiclient.discovery import build
           
           creds = Credentials(
@@ -25,10 +26,12 @@ jobs:
               token_uri="https://oauth2.googleapis.com/token"
           )
           
+          creds.refresh(Request())
+          
           youtube = build("youtube", "v3", credentials=creds)
           request = youtube.channels().list(part="snippet", mine=True)
           response = request.execute()
           
-          print("✅ Authentication successful!")
+          print("✅ Success!")
           print(f"Channel: {response['items'][0]['snippet']['title']}")
           EOF
