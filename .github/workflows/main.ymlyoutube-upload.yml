@@ -8,80 +8,78 @@ on:
         required: true
         default: 'nature'
       sound:
-        description: 'Background sound'
+        description: 'Sound'
         required: true
         default: 'piano'
       title:
-        description: 'YouTube Video Title'
+        description: 'Video title'
         required: true
         default: 'Nature Relaxation'
       description:
-        description: 'YouTube Description'
+        description: 'Video description'
         required: true
-        default: 'Beautiful nature video'
+        default: 'Relaxing nature video'
 
 jobs:
-  create-and-upload:
+  create:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg jq python3-pip
+          pip3 install google-auth google-auth-oauthlib google-api-python-client
 
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg jq
-
-      - name: Get Video from Pixabay
+      - name: Get video from Pixabay
         env:
           PIX_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           VIDEO_URL=$(curl -s "https://pixabay.com/api/videos/?key=$PIX_KEY&q=${{ github.event.inputs.keyword }}" | jq -r '.hits[0].videos.medium.url')
           curl -L -o video.mp4 "$VIDEO_URL"
 
-      - name: Get Sound from Freesound
+      - name: Get sound from Freesound
         env:
           FS_KEY: ${{ secrets.FREESOUND_API_KEY }}
         run: |
           SOUND_URL=$(curl -s "https://freesound.org/apiv2/search/text/?query=${{ github.event.inputs.sound }}&token=$FS_KEY&fields=previews&page_size=1" | jq -r '.results[0].previews."preview-hq-mp3"')
           curl -L -o audio.mp3 "$SOUND_URL"
 
-      - name: Combine Video + Audio
+      - name: Combine video and audio
         run: |
           ffmpeg -stream_loop -1 -i audio.mp3 -i video.mp4 -c:v copy -c:a aac -shortest -map 0:a -map 1:v output.mp4
+          ls -lh output.mp4
 
       - name: Upload to YouTube
         run: |
-          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
-          python -c "
+          python3 << 'EOF'
           import os
           from google.auth.credentials import Credentials
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
-          
+
           creds = Credentials(
               token=None,
-              refresh_token='${{ secrets.YOUTUBE_REFRESH_TOKEN }}',
-              client_id='${{ secrets.YOUTUBE_CLIENT_ID }}',
-              client_secret='${{ secrets.YOUTUBE_CLIENT_SECRET }}',
-              token_uri='https://oauth2.googleapis.com/token'
+              refresh_token="${{ secrets.YOUTUBE_REFRESH_TOKEN }}",
+              client_id="${{ secrets.YOUTUBE_CLIENT_ID }}",
+              client_secret="${{ secrets.YOUTUBE_CLIENT_SECRET }}",
+              token_uri="https://oauth2.googleapis.com/token"
           )
-          
-          youtube = build('youtube', 'v3', credentials=creds)
-          
+
+          youtube = build("youtube", "v3", credentials=creds)
+
           body = {
-              'snippet': {
-                  'title': '${{ github.event.inputs.title }}',
-                  'description': '${{ github.event.inputs.description }}',
-                  'tags': ['nature', 'relaxing'],
-                  'categoryId': '22'
+              "snippet": {
+                  "title": "${{ github.event.inputs.title }}",
+                  "description": "${{ github.event.inputs.description }}",
+                  "categoryId": "22"
               },
-              'status': {
-                  'privacyStatus': 'public'
+              "status": {
+                  "privacyStatus": "public"
               }
           }
-          
-          media = MediaFileUpload('output.mp4', chunksize=-1, resumable=True)
-          request = youtube.videos().insert(part='snippet,status', body=body, media_body=media)
+
+          media = MediaFileUpload("output.mp4", chunksize=-1, resumable=True)
+          request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
           response = request.execute()
-          print('Upload successful! Video ID:', response['id'])
-          "
+          print(f"✅ Uploaded! Video ID: {response['id']}")
+          EOF
