@@ -34,4 +34,4 @@ jobs:
           
           print("✅ Success!")
           print(f"Channel: {response['items'][0]['snippet']['title']}")
-          EOF
+          EOF 
